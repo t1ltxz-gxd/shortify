@@ -1,0 +1,35 @@
+syntax = 'proto3';
+
+package url_v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/t1ltxz-gxd/shortify/pkg/url_v1;url_v1";
+
+service UrlV1 {
+  rpc GetUrl(GetRequest) returns (GetResponse);
+  rpc CreateUrl(CreateRequest) returns (CreateResponse);
+}
+
+message Url {
+  string short_url = 1;
+  string original_url = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message GetRequest {
+  string url = 1;
+}
+
+message GetResponse {
+  string url = 1;
+}
+
+message CreateRequest {
+  string url = 1;
+}
+
+message CreateResponse {
+  string url = 1;
+}
