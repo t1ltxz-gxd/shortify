@@ -67,7 +67,7 @@ compose:
 
 compose-up:
 	@echo "Running docker-compose up"
-	@docker-compose up -d -f
+	@docker-compose up -d
 	@echo "Docker-compose up finished"
 
 compose-down:

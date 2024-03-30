@@ -72,7 +72,7 @@ function Write-Env {
 
 # Ask for and write environment variables
 Write-Env -varName "ENV" -promptMessage "environment" -defaultValue "development" -secret $false
-Wrive-Env -varName "GRPC_PORT" -promptMessage "gRPC port" -defaultValue "50051" -secret $false
+Write-Env -varName "GRPC_PORT" -promptMessage "gRPC port" -defaultValue "50051" -secret $false
 Write-Env -varName "REDIS_PASS" -promptMessage "Redis password" -defaultValue "mysecretpassword" -secret $true
 Write-Env -varName "POSTGRES_USER" -promptMessage "PostgreSQL user" -defaultValue "postgres" -secret $false
 Write-Env -varName "POSTGRES_PASSWORD" -promptMessage "PostgreSQL password" -defaultValue "postgres" -secret $true

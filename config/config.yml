@@ -53,9 +53,6 @@ app:
   services:
     # Configuration for the hash service
     hash:
-      # The TTL for the cache in seconds
-      ttlCache: 3600
-
       # The minimum length for the hashes
       minLength: 10
 
