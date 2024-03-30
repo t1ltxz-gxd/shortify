@@ -1,0 +1,21 @@
+# https://golangci-lint.run/usage/configuration/
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - staticcheck
+    - gosec
+    - errcheck
+    - revive
+
+linter-settings:
+  gofmt:
+    simplify: true
+    tabs: true
+  lll:
+    line-length: 120
+  blank-imports:
+    check:
+      - "underscore"
+    skip: "_ \"github.com/lib/pq\"" # postgres driver
