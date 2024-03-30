@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: shortify-postgres
+    env_file:
+      - .env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - shortify-network
+
+  redis:
+    image: redis:alpine
+    container_name: shortify-redis
+    env_file:
+      - .env
+    volumes:
+      - ./data/redis:/data
+      - ./config/redis:/usr/local/etc/redis
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass "${REDIS_PASS}" --maxmemory 64M --maxmemory-policy volatile-lru
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    networks:
+      - shortify-network
+
+  shortify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shortify-backend
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+      - ./migrations:/app/migrations
+    networks:
+      - shortify-network
+
+networks:
+    shortify-network:
+        driver: bridge

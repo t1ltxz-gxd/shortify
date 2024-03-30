@@ -1,0 +1,25 @@
+# ignore all files
+*
+
+# dependencies
+!go.mod
+!go.sum
+
+# entry point
+!cmd/grpc_server/main.go
+!docker-entrypoint.sh
+
+# internal packages
+!internal/**
+
+# public packages
+!pkg/**
+
+# configuration files
+!config/**
+
+# migrations
+!migrations/**
+
+# environment files
+!*.env
