@@ -1,0 +1,64 @@
+# The host for the application
+host: localhost
+
+# The host for the PostgreSQL database
+postgresHost: 0.0.0.0
+
+# The host for the Redis database
+redisHost: 0.0.0.0
+
+# The Redis database number
+redisDB: 0
+
+# The ports for the various services
+ports:
+  # The port for the HTTP server
+  http: 8000
+
+  # The port for the gRPC server
+  grpc: 8001
+
+  # The port for the Redis database
+  redis: 6379
+
+# The environment files to load
+envFiles:
+  - .env
+
+# Configuration for the logger
+logger:
+  # The name of the logger
+  name: Shortify
+
+  # Configuration for the file syncer
+  fileSyncer:
+    # The filename for the log file
+    filename: logs/stdout.log
+
+    # The maximum size of the log file in MB
+    maxSize: 32
+
+    # The maximum number of backup log files to keep
+    maxBackups: 3
+
+    # Whether to compress the backup log files
+    compress: true
+
+    # The maximum age of the backup log files in days
+    maxAge: 7
+
+# Configuration for the application
+app:
+  # Configuration for the services
+  services:
+    # Configuration for the hash service
+    hash:
+      # The TTL for the cache in seconds
+      ttlCache: 3600
+
+      # The minimum length for the hashes
+      minLength: 10
+
+      # The alphabet to use for the hashes
+      alphabet: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_
+
