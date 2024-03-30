@@ -6,30 +6,48 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/t1ltxz-gxd/shortify/pkg/url_v1;url_v1";
 
+// UrlV1 is a service that provides methods for getting and creating URLs.
 service UrlV1 {
-  rpc GetUrl(GetRequest) returns (GetResponse);
-  rpc CreateUrl(CreateRequest) returns (CreateResponse);
+  // Get is a remote procedure call (RPC) that takes a GetRequest and returns a GetResponse.
+  // The GetRequest contains a hash string that represents the hashed version of the URL.
+  // The GetResponse contains the original URL.
+  rpc Get(GetRequest) returns (GetResponse);
+
+  // Create is a remote procedure call (RPC) that takes a CreateRequest and returns a CreateResponse.
+  // The CreateRequest contains the original URL.
+  // The CreateResponse contains a short URL that represents the hashed version of the original URL.
+  rpc Create(CreateRequest) returns (CreateResponse);
 }
 
+// Url is a message that represents a URL.
+// It contains a short URL, the original URL, and timestamps for when the URL was created and last updated.
 message Url {
-  string short_url = 1;
-  string original_url = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
+  string short_url = 1; // The short URL
+  string original_url = 2; // The original URL
+  google.protobuf.Timestamp created_at = 3; // The timestamp when the URL was created
+  google.protobuf.Timestamp updated_at = 4; // The timestamp when the URL was last updated
 }
 
+// GetRequest is a message that represents a request to get a URL.
+// It contains a hash string that represents the hashed version of the URL.
 message GetRequest {
-  string url = 1;
+  string hash = 1; // The hash of the URL
 }
 
+// GetResponse is a message that represents a response to a request to get a URL.
+// It contains the original URL.
 message GetResponse {
-  string url = 1;
+  string url = 1; // The original URL
 }
 
+// CreateRequest is a message that represents a request to create a URL.
+// It contains the original URL.
 message CreateRequest {
-  string url = 1;
+  string url = 1; // The original URL
 }
 
+// CreateResponse is a message that represents a response to a request to create a URL.
+// It contains a short URL that represents the hashed version of the original URL.
 message CreateResponse {
-  string url = 1;
+  string short_url = 1; // The short URL
 }

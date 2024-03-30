@@ -22,8 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UrlV1Client interface {
-	GetUrl(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	CreateUrl(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 }
 
 type urlV1Client struct {
@@ -34,18 +34,18 @@ func NewUrlV1Client(cc grpc.ClientConnInterface) UrlV1Client {
 	return &urlV1Client{cc}
 }
 
-func (c *urlV1Client) GetUrl(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *urlV1Client) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, "/url_v1.UrlV1/GetUrl", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/url_v1.UrlV1/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *urlV1Client) CreateUrl(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+func (c *urlV1Client) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
 	out := new(CreateResponse)
-	err := c.cc.Invoke(ctx, "/url_v1.UrlV1/CreateUrl", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/url_v1.UrlV1/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +56,8 @@ func (c *urlV1Client) CreateUrl(ctx context.Context, in *CreateRequest, opts ...
 // All implementations must embed UnimplementedUrlV1Server
 // for forward compatibility
 type UrlV1Server interface {
-	GetUrl(context.Context, *GetRequest) (*GetResponse, error)
-	CreateUrl(context.Context, *CreateRequest) (*CreateResponse, error)
+	Get(context.Context, *GetRequest) (*GetResponse, error)
+	Create(context.Context, *CreateRequest) (*CreateResponse, error)
 	mustEmbedUnimplementedUrlV1Server()
 }
 
@@ -65,11 +65,11 @@ type UrlV1Server interface {
 type UnimplementedUrlV1Server struct {
 }
 
-func (UnimplementedUrlV1Server) GetUrl(context.Context, *GetRequest) (*GetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUrl not implemented")
+func (UnimplementedUrlV1Server) Get(context.Context, *GetRequest) (*GetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedUrlV1Server) CreateUrl(context.Context, *CreateRequest) (*CreateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateUrl not implemented")
+func (UnimplementedUrlV1Server) Create(context.Context, *CreateRequest) (*CreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
 func (UnimplementedUrlV1Server) mustEmbedUnimplementedUrlV1Server() {}
 
@@ -84,38 +84,38 @@ func RegisterUrlV1Server(s grpc.ServiceRegistrar, srv UrlV1Server) {
 	s.RegisterService(&UrlV1_ServiceDesc, srv)
 }
 
-func _UrlV1_GetUrl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UrlV1_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UrlV1Server).GetUrl(ctx, in)
+		return srv.(UrlV1Server).Get(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/url_v1.UrlV1/GetUrl",
+		FullMethod: "/url_v1.UrlV1/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UrlV1Server).GetUrl(ctx, req.(*GetRequest))
+		return srv.(UrlV1Server).Get(ctx, req.(*GetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UrlV1_CreateUrl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UrlV1_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UrlV1Server).CreateUrl(ctx, in)
+		return srv.(UrlV1Server).Create(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/url_v1.UrlV1/CreateUrl",
+		FullMethod: "/url_v1.UrlV1/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UrlV1Server).CreateUrl(ctx, req.(*CreateRequest))
+		return srv.(UrlV1Server).Create(ctx, req.(*CreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -128,12 +128,12 @@ var UrlV1_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UrlV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetUrl",
-			Handler:    _UrlV1_GetUrl_Handler,
+			MethodName: "Get",
+			Handler:    _UrlV1_Get_Handler,
 		},
 		{
-			MethodName: "CreateUrl",
-			Handler:    _UrlV1_CreateUrl_Handler,
+			MethodName: "Create",
+			Handler:    _UrlV1_Create_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
