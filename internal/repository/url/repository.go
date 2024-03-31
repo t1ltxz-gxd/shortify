@@ -6,6 +6,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"github.com/t1ltxz-gxd/shortify/internal/middleware/logger"
 	"github.com/t1ltxz-gxd/shortify/internal/models"
 	def "github.com/t1ltxz-gxd/shortify/internal/repository"
@@ -101,7 +102,7 @@ func (r *repository) Get(_ context.Context, hash string) (*models.URL, error) {
 		}
 
 		// Save the URL in the Redis cache
-		err = r.cache.Set(hash, url.Original, time.Hour).Err()
+		err = r.cache.Set(hash, url.Original, time.Duration(viper.GetInt("app.services.hash.ttlCache"))).Err()
 		if err != nil {
 			logger.Error("Failed to save URL in the cache", zap.Error(err))
 			return nil, err
