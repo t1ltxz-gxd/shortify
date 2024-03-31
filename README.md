@@ -33,7 +33,7 @@ make env
 Open `config/config.yml` and fill in the values
 
 ## 🚀 Launch
-Run `go run cmd/app/main.go` or `make run`.
+Run `go run cmd/grpc_server/main.go` or `make start`.
 
 ## 🧹 Linters
 Run `golangci-lint run cmd/... internal/... pkg/... --config=./.golangci.yml` or `make lint`.

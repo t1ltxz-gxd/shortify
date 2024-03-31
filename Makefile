@@ -28,17 +28,18 @@ bench:
 
 build:
 	@echo "Building application"
-	@go build -o bin/app cmd/app/main.go
+	@go build -o bin/ cmd/grpc_server/main.go
 	@echo "Application built"
 
+start:
+	@echo "Starting application"
+	@./bin/main
+	@echo "Application started"
+
 run:
-ifeq ($(OS),Windows_NT)
 	@echo "Running application"
-	@go run bin/app.exe
-else
-	@echo "Running application"
-	@go run bin/app
-endif
+	@go run cmd/grpc_server/main.go
+	@echo "Application finished"
 
 proto:
 	mkdir -p pkg/url_v1 && \
