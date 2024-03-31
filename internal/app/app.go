@@ -2,9 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
-	"github.com/go-redis/redis"
-	"github.com/jmoiron/sqlx"
 	// reviving the pq driver
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -28,8 +25,6 @@ import (
 type App struct {
 	serviceProvider *serviceProvider // serviceProvider provides the services for the application
 	grpcServer      *grpc.Server     // grpcServer is the gRPC server for the application
-	db              *sqlx.DB         // db is the database connection for the application
-	cache           *redis.Client    // cache is the Redis client for the application
 }
 
 // NewApp is a function that creates a new App struct.
@@ -70,8 +65,6 @@ func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initLogger,
-		a.initCache,
-		a.initDatabase,
 		a.initServiceProvider,
 		a.initGRPCServer,
 	}
@@ -83,14 +76,6 @@ func (a *App) initDeps(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	// Apply the database migrations by calling the applyMigration method
-	migrationFiles := []string{"migrations/001_initial_schema/up.sql"}
-	err := a.applyMigration(a.db, migrationFiles)
-	// If the applyMigration method returns an error, return the error
-	if err != nil {
-		return err
 	}
 
 	// If the applyMigration method does not return an error, return nil
@@ -108,11 +93,11 @@ func (a *App) initDeps(ctx context.Context) error {
 // If the LoadConfig method returns an error, initConfig returns the error.
 // If the LoadConfig method does not return an error, initConfig returns nil.
 func (a *App) initConfig(_ context.Context) error {
-	err := config.LoadDotEnv(".env")
+	err := config.LoadConfig("config", "config", "yml")
 	if err != nil {
 		return err
 	}
-	err = config.LoadConfig("config", "config", "yml")
+	err = config.LoadDotEnv(viper.GetStringSlice("envFiles")...)
 	if err != nil {
 		return err
 	}
@@ -141,79 +126,6 @@ func (a *App) initLogger(_ context.Context) error {
 	return nil
 }
 
-// initCache is a method on the App struct.
-// It initializes the Redis cache for the application.
-// It takes a context as a parameter and returns an error.
-// It creates a new Redis client with the address of the Redis server, password, and default DB from the environment variables.
-// It then pings the Redis server to check the connection.
-// If the ping returns an error, initCache returns the error.
-// If the ping does not return an error, initCache assigns the Redis client to the cache field of the App struct and logs that the connection to Redis was successful.
-// initCache then returns nil.
-func (a *App) initCache(_ context.Context) error {
-	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", viper.GetString("redisHost"), viper.GetInt("ports.redis")), // the address of the Redis server
-		Password: os.Getenv("REDIS_PASS"),                                                         // password (if required)
-		DB:       viper.GetInt("RedisDB"),                                                         // use default DB
-	})
-
-	_, err := client.Ping().Result()
-	if err != nil {
-		return err
-	}
-	a.cache = client
-	logger.Info("Connected to Redis", zap.String("address", "localhost:6379"))
-	return nil
-}
-
-// initDatabase is a method on the App struct.
-// It initializes the database connection for the application.
-// It takes a context as a parameter and returns an error.
-// It connects to the PostgreSQL database with the user, password, and dbname from the environment variables.
-// If the connection returns an error, initDatabase returns the error.
-// If the connection does not return an error, initDatabase assigns the database connection to the db field of the App struct and logs that the connection to the database was successful.
-// initDatabase then returns nil.
-func (a *App) initDatabase(_ context.Context) error {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		viper.GetString("postgresHost"),
-		os.Getenv("POSTGRES_PORT"),
-		os.Getenv("POSTGRES_DB"))
-	db, err := sqlx.Connect("postgres", dsn)
-
-	if err != nil {
-		return err
-	}
-	a.db = db
-	logger.Info("Connected to database", zap.String("database", os.Getenv("POSTGRES_DB")))
-	return nil
-}
-
-// applyMigration is a method on the App struct.
-// It applies the database migrations for the application.
-// It takes a sqlx.DB pointer and a slice of migration file paths as parameters and returns an error.
-// It iterates over the slice of migration file paths and reads each file.
-// If the read returns an error, applyMigration returns the error.
-// If the read does not return an error, applyMigration executes the migration on the database.
-// If the execution returns an error, applyMigration returns the error.
-// If the execution does not return an error, applyMigration logs that the migration was applied successfully.
-// After all migrations have been applied, applyMigration returns nil.
-func (a *App) applyMigration(db *sqlx.DB, migrationFiles []string) error {
-	for _, migrationFile := range migrationFiles {
-		migration, err := os.ReadFile(migrationFile)
-		if err != nil {
-			return err
-		}
-		_, err = db.Exec(string(migration))
-		if err != nil {
-			return err
-		}
-
-		logger.Info("Applied migration from file %s", zap.String("file", migrationFile))
-	}
-	return nil
-}
-
 // initServiceProvider is a method on the App struct.
 // It initializes the service provider for the application.
 // It takes a context as a parameter and returns an error.
@@ -221,7 +133,7 @@ func (a *App) applyMigration(db *sqlx.DB, migrationFiles []string) error {
 // It then assigns the service provider to the serviceProvider field of the App struct.
 // initServiceProvider then returns nil.
 func (a *App) initServiceProvider(_ context.Context) error {
-	a.serviceProvider = newServiceProvider(a.db, a.cache)
+	a.serviceProvider = newServiceProvider()
 	return nil
 }
 

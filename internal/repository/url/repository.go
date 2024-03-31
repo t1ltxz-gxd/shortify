@@ -4,14 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"github.com/go-redis/redis"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/t1ltxz-gxd/shortify/internal/database"
+	"github.com/t1ltxz-gxd/shortify/internal/middleware/cache"
 	"github.com/t1ltxz-gxd/shortify/internal/middleware/logger"
 	"github.com/t1ltxz-gxd/shortify/internal/models"
 	def "github.com/t1ltxz-gxd/shortify/internal/repository"
-	"github.com/t1ltxz-gxd/shortify/internal/repository/url/converter"
-	repoModel "github.com/t1ltxz-gxd/shortify/internal/repository/url/models"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -26,9 +25,9 @@ var _ def.URLRepository = (*repository)(nil)
 // cache is a pointer to a redis.Client instance that represents the Redis cache.
 // m is a sync.RWMutex instance that is used for read/write locking to ensure thread safety.
 type repository struct {
-	db    *sqlx.DB      // The database connection
-	cache *redis.Client // The Redis cache
-	m     sync.RWMutex  // The read/write mutex
+	db    database.URLDatabase // The database connection
+	cache cache.URLCache       // The cache
+	m     sync.RWMutex         // The read/write mutex
 }
 
 // NewRepository is a function that creates a new repository.
@@ -36,7 +35,7 @@ type repository struct {
 // The sqlx.DB instance represents the database connection.
 // The redis.Client instance represents the Redis cache.
 // It returns a pointer to a repository instance.
-func NewRepository(db *sqlx.DB, cache *redis.Client) def.URLRepository {
+func NewRepository(db database.URLDatabase, cache cache.URLCache) def.URLRepository {
 	return &repository{
 		db:    db,    // Set the database connection
 		cache: cache, // Set the Redis cache
@@ -55,17 +54,10 @@ func (r *repository) Create(_ context.Context, hash string, url string) error {
 	defer r.m.Unlock() // Unlock the mutex after the creation
 
 	// The SQL query to insert the URL into the database
-	query := `INSERT INTO urls (original_url, hash) VALUES (:original_url, :hash)`
-	_, err := r.db.NamedExec(query, &repoModel.URL{
-		Original:  url,                                         // Set the original URL
-		Hash:      hash,                                        // Set the hash
-		AddedAt:   time.Now(),                                  // Set the time when the URL was added
-		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true}, // Set the time when the URL was updated
-	})
+	err := r.db.Create(context.Background(), url, hash)
 	if err != nil {
 		logger.Error("Failed to insert URL into the database", zap.Error(err)) // Log the error if the creation fails
 	}
-
 	return err // Return the error
 }
 
@@ -85,12 +77,12 @@ func (r *repository) Get(_ context.Context, hash string) (*models.URL, error) {
 
 	// Try to get the URL from the Redis cache
 	logger.Debug("Fetching URL from cache", zap.String("hash", hash))
-	val, err := r.cache.Get(hash).Result()
+	val, err := r.cache.Get(context.Background(), hash)
 	if errors.Is(err, redis.Nil) {
 		// If the URL is not in the cache, get it from the Postgres database
-		var url repoModel.URL
 		logger.Debug("Fetching URL from database", zap.String("hash", hash))
-		err := r.db.Get(&url, "SELECT * FROM urls WHERE hash = $1", hash)
+		url, err := r.db.Get(context.Background(), hash)
+		//err := r.db.Get(&url, "SELECT * FROM urls WHERE hash = $1", hash)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				// If the URL is not in the database, return nil
@@ -102,7 +94,8 @@ func (r *repository) Get(_ context.Context, hash string) (*models.URL, error) {
 		}
 
 		// Save the URL in the Redis cache
-		err = r.cache.Set(hash, url.Original, time.Duration(viper.GetInt("app.services.hash.ttlCache"))).Err()
+		ttl := viper.GetUint("app.services.hash.ttlCache")
+		err = r.cache.Create(context.Background(), hash, url.Original, time.Duration(ttl)*time.Second)
 		if err != nil {
 			logger.Error("Failed to save URL in the cache", zap.Error(err))
 			return nil, err
@@ -110,13 +103,15 @@ func (r *repository) Get(_ context.Context, hash string) (*models.URL, error) {
 
 		// Return the URL
 		logger.Debug("URL is fetched from the database", zap.String("url", url.Original))
-		return converter.ToURLFromRepo(url), nil
+		return url, nil
 	} else if err != nil {
 		logger.Error("Failed to fetch URL from the cache", zap.String("hash", hash), zap.Error(err))
 		return nil, err
 	}
 
 	// If the URL is in the cache, return it
-	logger.Debug("URL is fetched from the cache", zap.String("url", val))
-	return &models.URL{Original: val}, nil
+	logger.Debug("URL is fetched from the cache",
+		zap.String("hash", val.Hash),
+		zap.String("url", val.Original))
+	return val, nil
 }

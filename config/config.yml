@@ -24,6 +24,8 @@ ports:
 # The environment files to load
 envFiles:
   - .env
+migrationFiles:
+  - migrations/001_initial_schema.up.sql
 
 # Configuration for the logger
 logger:

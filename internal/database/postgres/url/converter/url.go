@@ -1,9 +1,9 @@
 package converter
 
 import (
+	repoModels "github.com/t1ltxz-gxd/shortify/internal/database/postgres/url/models"
 	"github.com/t1ltxz-gxd/shortify/internal/middleware/logger"
 	"github.com/t1ltxz-gxd/shortify/internal/models"
-	repoModels "github.com/t1ltxz-gxd/shortify/internal/repository/url/models"
 	"go.uber.org/zap"
 )
 
