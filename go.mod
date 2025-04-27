@@ -1,4 +1,4 @@
-module github.com/t1ltxz-gxd/shortify
+module go.t1ltxz.ninja/shortify
 
 go 1.22
 
